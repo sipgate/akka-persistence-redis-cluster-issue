@@ -1,0 +1,21 @@
+version: '2.1'
+services:
+  redis-cluster:
+    environment:
+     IP: ${REDIS_CLUSTER_IP}
+    image: grokzen/redis-cluster:4.0.9
+    hostname: server
+    ports:
+      - '7000-7007:7000-7007'
+    healthcheck:
+      test: ["CMD-SHELL", "/usr/bin/ruby /redis/src/redis-trib.rb info localhost:7000 | egrep -q '.OK. 0 keys in 3 masters.'"]
+      interval: 1s
+      timeout: 1s
+      retries: 42
+
+  akka-app:
+    build: ./app-container/
+    hostname: app
+    depends_on:
+      redis-cluster:
+        condition: service_healthy
